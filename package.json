@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "devDependencies": {
+    "babelify": "^6.3.0",
+    "bootstrap-sass": "^3.0.0",
+    "browser-sync": "^2.9.7",
+    "browserify": "^11.2.0",
+    "es5-shim": "^4.1.13",
+    "gulp": "^3.8.8",
+    "redux-devtools": "^2.1.5",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "dependencies": {
+    "axios": "^0.6.0",
+    "react": "^0.13.3",
+    "react-redux": "^3.0.0",
+    "redux": "^3.0.2",
+    "redux-actions": "^0.8.0",
+    "redux-diff-logger": "0.0.6",
+    "redux-thunk": "^1.0.0"
+  }
+}

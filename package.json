@@ -1,4 +1,7 @@
 {
+  "name": "GistBox",
+  "version": "0.1.0",
+  "main": "main.js",
   "private": true,
   "devDependencies": {
     "babelify": "^6.3.0",

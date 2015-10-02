@@ -14,14 +14,14 @@ input {
 button {
     margin: 0 1rem;
     height: 2rem;
-    width: 2rem;
+    width: 4rem;
     border-style: solid;
 }
 
 .gist-div {
     text-align: center;
     border-width: 0.1rem;
-    max-width: 70%;
+    max-width: 100%;
     overflow: scroll;
     max-height: 20rem;
     margin-bottom: 0.1rem;

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import _ from 'lodash'
 
 export default class GistDiv extends Component {
 
@@ -10,6 +11,8 @@ export default class GistDiv extends Component {
   componentDidUpdate () {
     console.log('componentDidUpdate');
     this._hightlight();
+
+    var client = new ZeroClipboard( document.getElementsByClassName("copy-button") );
   }
 
   _hightlight () {
@@ -20,27 +23,41 @@ export default class GistDiv extends Component {
   render() {
     let self = this
     console.log('gistdiv',self.props)
-    let row = self.props.items.map(function (obj,index) {
-      let  language = 'text';
-      if (obj.language !== null) {
-            language = obj.language === 'Shell' ? 'bash' : obj.language.toLowerCase();
+    
+    let row = self.props.items.map(function (gist,index) {
+      let  language = 'textile';
+      if (gist.language !== null) {
+            language = gist.language === 'Shell' ? 'bash' : gist.language.toLowerCase();
+      }
+
+      if (language === 'text') {
+            language = 'textile';
       }
 
       let cname = "language-"+ language;
       let pname = "line-numbers" + " " + cname;
        return (
-            <div className="gist-div">
-                  <pre className={pname}>
-                        <code className={cname}>{obj.code}</code>
-                  </pre>
+            <div >
+                  <h2>{gist.filename}</h2>
+                  <span>
+                            <button className="copy-button" data-clipboard-text={gist.code}>复制</button>
+                  </span>
+                  <div className="gist-div">
+                        <pre className={pname}>
+                              <code className={cname}>{gist.code}</code>
+                        </pre>
+                  </div>
             </div>
       )
     })
-    console.log(row)
+    console.log('row',row)
+    if (_.isEmpty(row)) {
+      row = "请先获取Gist"
+    }
     return (
-     <div >
-      { row }
-     </div>
+       <div className="code-div" >
+        { row }
+       </div>
     );
   }
 }

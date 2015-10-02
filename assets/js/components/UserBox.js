@@ -13,11 +13,11 @@ export default class UserBox extends Component {
     console.log(this.props)
     return (
       <div className="userBox">
-        <h1>GistBox</h1>
-        <GistForm username={this.props.username} 
-        handlerSubmit={this.props.handlerSubmit}   
-        handlerChange={this.props.handlerChange} />
-        <GistDiv items={this.props.items} />
+            <h1>GistBox</h1>
+            <GistForm username={this.props.username} 
+                handlerSubmit={this.props.handlerSubmit}   
+                handlerChange={this.props.handlerChange} />
+            <GistDiv items={this.props.items} />
       </div>
     );
   }

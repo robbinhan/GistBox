@@ -13,8 +13,7 @@ export function showGistsSuccess (username,json) {
 	return {
 		type: 'SHOW_GISTS_SUCCESS',
 		username,
-		posts: json.map(child => child.html_url),//function(child){return child.data}
-            receivedAt: Date.now()
+		json
 	}
 }
 
@@ -55,11 +54,26 @@ export function fetchGists(username) {
     // 这个案例中，我们返回一个等待处理的 promise。
     // 这并不是 redux middleware 所必须的，但是我们的一个约定。
     // 
-    axios.get(`https://api.github.com/users/${username}/gists`)
-    .then(response => response.data)
-    .then(function(json) {
-      console.log('response json',json); 
-      dispatch(showGistsSuccess(username, json)); 
+      axios.get(`https://api.github.com/users/${username}/gists`)
+      .then(response => response.data)
+      .then(function(json) {
+            console.log('response json',json); 
+            //解析gist的URL，并发异步请求获取内容
+            var serial = [];
+            json.map(function(gist){
+                  for (var key in gist.files) {
+                        let file = gist.files[key];
+                        var p = axios.get(file.raw_url).then(res => Object.assign({},file,{code:res.data}));
+                        serial.push(p);
+                  }
+            })
+            console.log('serial',serial);
+
+            axios.all(serial)
+            .then(function (gists) {
+                  console.log('no spread',gists)
+                  dispatch(showGistsSuccess(username, gists)); 
+            });
     }).catch(function(ex) {
       console.log('parsing failed', ex)
     })

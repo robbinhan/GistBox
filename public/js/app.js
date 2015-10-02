@@ -31,10 +31,7 @@ function showGistsSuccess(username, json) {
   return {
     type: 'SHOW_GISTS_SUCCESS',
     username: username,
-    posts: json.map(function (child) {
-      return child.html_url;
-    }), //function(child){return child.data}
-    receivedAt: Date.now()
+    json: json
   };
 }
 
@@ -78,7 +75,30 @@ function fetchGists(username) {
       return response.data;
     }).then(function (json) {
       console.log('response json', json);
-      dispatch(showGistsSuccess(username, json));
+      //解析gist的URL，并发异步请求获取内容
+      var serial = [];
+      json.map(function (gist) {
+        var _loop = function () {
+          var file = gist.files[key];
+          p = _axios2['default'].get(file.raw_url).then(function (res) {
+            return Object.assign({}, file, { code: res.data });
+          });
+
+          serial.push(p);
+        };
+
+        for (var key in gist.files) {
+          var p;
+
+          _loop();
+        }
+      });
+      console.log('serial', serial);
+
+      _axios2['default'].all(serial).then(function (gists) {
+        console.log('no spread', gists);
+        dispatch(showGistsSuccess(username, gists));
+      });
     })['catch'](function (ex) {
       console.log('parsing failed', ex);
     });
@@ -111,28 +131,57 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var UserList = (function (_Component) {
-  _inherits(UserList, _Component);
+var GistDiv = (function (_Component) {
+  _inherits(GistDiv, _Component);
 
-  function UserList() {
-    _classCallCheck(this, UserList);
+  function GistDiv() {
+    _classCallCheck(this, GistDiv);
 
-    _get(Object.getPrototypeOf(UserList.prototype), 'constructor', this).apply(this, arguments);
+    _get(Object.getPrototypeOf(GistDiv.prototype), 'constructor', this).apply(this, arguments);
   }
 
-  _createClass(UserList, [{
+  _createClass(GistDiv, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      console.log('componentDidMount');
+      this._hightlight();
+    }
+  }, {
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate() {
+      console.log('componentDidUpdate');
+      this._hightlight();
+    }
+  }, {
+    key: '_hightlight',
+    value: function _hightlight() {
+      console.log('_hightlight');
+      Prism.highlightAll(true);
+    }
+  }, {
     key: 'render',
     value: function render() {
       var self = this;
       console.log('gistdiv', self.props);
-      var row = self.props.items.map(function (url, index) {
+      var row = self.props.items.map(function (obj, index) {
+        var language = 'text';
+        if (obj.language !== null) {
+          language = obj.language === 'Shell' ? 'bash' : obj.language.toLowerCase();
+        }
+
+        var cname = "language-" + language;
+        var pname = "line-numbers" + " " + cname;
         return _react2['default'].createElement(
           'div',
-          null,
+          { className: 'gist-div' },
           _react2['default'].createElement(
-            'a',
-            { href: url, target: '_blank' },
-            index
+            'pre',
+            { className: pname },
+            _react2['default'].createElement(
+              'code',
+              { className: cname },
+              obj.code
+            )
           )
         );
       });
@@ -145,10 +194,10 @@ var UserList = (function (_Component) {
     }
   }]);
 
-  return UserList;
+  return GistDiv;
 })(_react.Component);
 
-exports['default'] = UserList;
+exports['default'] = GistDiv;
 module.exports = exports['default'];
 
 },{"react":186}],3:[function(require,module,exports){
@@ -380,8 +429,7 @@ function gets(state, action) {
     case 'SHOW_GISTS_SUCCESS':
       return Object.assign({}, state, {
         isFetching: false,
-        items: action.posts,
-        lastUpdated: action.receivedAt
+        items: action.json
       });
     case 'SHOW_GISTS_FAIL':
       return Object.assign({}, state, {

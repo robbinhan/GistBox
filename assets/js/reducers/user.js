@@ -18,8 +18,7 @@ function gets(state = {
   case 'SHOW_GISTS_SUCCESS':
   	return Object.assign({}, state, {
       isFetching: false,
-      items: action.posts,
-      lastUpdated: action.receivedAt
+      items: action.json
     });
   case 'SHOW_GISTS_FAIL':
   	return Object.assign({}, state, {

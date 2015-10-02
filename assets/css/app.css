@@ -1,0 +1,28 @@
+:root {
+  margin: 0 auto;
+  text-align: center;
+}
+
+
+input {
+    border-color: #3498db;
+    border-width: 0.25rem;
+    height: 2rem;
+    width: 10rem;
+}
+
+button {
+    margin: 0 1rem;
+    height: 2rem;
+    width: 2rem;
+    border-style: solid;
+}
+
+.gist-div {
+    text-align: center;
+    border-width: 0.1rem;
+    max-width: 70%;
+    overflow: scroll;
+    max-height: 20rem;
+    margin-bottom: 0.1rem;
+}

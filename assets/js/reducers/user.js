@@ -30,7 +30,7 @@ function gets(state = {
 }
 
 
-function getGists(state = {username:'robbinhan',items:[]}, action) {
+function getGists(state = {username:'robbinhan',items:[],isFetching: false}, action) {
   switch (action.type) {
   case 'SHOW_GISTS_REQUEST':
   case 'SHOW_GISTS_SUCCESS':

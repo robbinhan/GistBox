@@ -218,6 +218,15 @@ var GistDiv = (function (_Component) {
       if (_lodash2['default'].isEmpty(row)) {
         row = "请先获取Gist";
       }
+
+      if (this.props.isFetching === true) {
+        return _react2['default'].createElement(
+          'div',
+          null,
+          _react2['default'].createElement('img', { src: './public/img/482.GIF' })
+        );
+      }
+
       return _react2['default'].createElement(
         'div',
         { className: 'code-div' },
@@ -348,7 +357,7 @@ var UserBox = (function (_Component) {
         _react2['default'].createElement(_GistForm2['default'], { username: this.props.username,
           handlerSubmit: this.props.handlerSubmit,
           handlerChange: this.props.handlerChange }),
-        _react2['default'].createElement(_GistDiv2['default'], { items: this.props.items })
+        _react2['default'].createElement(_GistDiv2['default'], { items: this.props.items, isFetching: this.props.isFetching })
       );
     }
   }]);
@@ -382,7 +391,8 @@ function mapStateToProps(state) {
   console.log('connet state', state);
   return {
     username: state.gists.username,
-    items: state.gists.items || []
+    items: state.gists.items || [],
+    isFetching: state.gists.isFetching
   };
 }
 
@@ -473,7 +483,7 @@ function gets(state, action) {
 }
 
 function getGists(state, action) {
-  if (state === undefined) state = { username: 'robbinhan', items: [] };
+  if (state === undefined) state = { username: 'robbinhan', items: [], isFetching: false };
 
   switch (action.type) {
     case 'SHOW_GISTS_REQUEST':

@@ -54,6 +54,15 @@ export default class GistDiv extends Component {
     if (_.isEmpty(row)) {
       row = "请先获取Gist"
     }
+
+    if (this.props.isFetching === true) {
+      return (
+            <div>
+            <img src="./public/img/482.GIF" />
+            </div>
+        )
+    }
+
     return (
        <div className="code-div" >
         { row }

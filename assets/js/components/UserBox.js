@@ -17,7 +17,7 @@ export default class UserBox extends Component {
             <GistForm username={this.props.username} 
                 handlerSubmit={this.props.handlerSubmit}   
                 handlerChange={this.props.handlerChange} />
-            <GistDiv items={this.props.items} />
+            <GistDiv items={this.props.items} isFetching={this.props.isFetching} />
       </div>
     );
   }

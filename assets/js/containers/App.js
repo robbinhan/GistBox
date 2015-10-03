@@ -8,7 +8,8 @@ function mapStateToProps(state) {
   console.log('connet state',state)
   return {
     username: state.gists.username,
-    items: state.gists.items || []
+    items: state.gists.items || [],
+    isFetching: state.gists.isFetching
   };
 }
 

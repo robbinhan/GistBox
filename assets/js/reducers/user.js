@@ -22,7 +22,8 @@ function gets(state = {
     });
   case 'SHOW_GISTS_FAIL':
   	return Object.assign({}, state, {
-      isFetching: false
+      isFetching: false,
+      error: action.error
     });
   default:
     return state;
@@ -30,13 +31,13 @@ function gets(state = {
 }
 
 
-function getGists(state = {username:'robbinhan',items:[],isFetching: false}, action) {
+function getGists(state = {username:'robbinhan',items:[],isFetching: false,error:null}, action) {
   switch (action.type) {
   case 'SHOW_GISTS_REQUEST':
   case 'SHOW_GISTS_SUCCESS':
   case 'SHOW_GISTS_FAIL':
     return Object.assign({}, state, gets(state[action.username], action) );
-    case 'CHANGE_USER_NAME':
+  case 'CHANGE_USER_NAME':
       return Object.assign({}, state,{
         username: action.username
       });

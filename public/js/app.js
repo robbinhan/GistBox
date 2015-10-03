@@ -2,7 +2,7 @@
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-  value: true
+      value: true
 });
 exports.showGistsRequest = showGistsRequest;
 exports.showGistsSuccess = showGistsSuccess;
@@ -11,6 +11,8 @@ exports.changeUserName = changeUserName;
 exports.fetchGists = fetchGists;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
 var _axios = require('axios');
 
@@ -21,32 +23,33 @@ var _axios2 = _interopRequireDefault(_axios);
  */
 
 function showGistsRequest(username) {
-  return {
-    type: 'SHOW_GISTS_REQUEST',
-    username: username
-  };
+      return {
+            type: 'SHOW_GISTS_REQUEST',
+            username: username
+      };
 }
 
 function showGistsSuccess(username, json) {
-  return {
-    type: 'SHOW_GISTS_SUCCESS',
-    username: username,
-    json: json
-  };
+      return {
+            type: 'SHOW_GISTS_SUCCESS',
+            username: username,
+            json: json
+      };
 }
 
-function showGistsFail(username) {
-  return {
-    type: 'SHOW_GISTS_FAIL',
-    username: username
-  };
+function showGistsFail(username, json) {
+      return {
+            type: 'SHOW_GISTS_FAIL',
+            username: username,
+            error: json.statusText
+      };
 }
 
 function changeUserName(username) {
-  return {
-    type: 'CHANGE_USER_NAME',
-    username: username
-  };
+      return {
+            type: 'CHANGE_USER_NAME',
+            username: username
+      };
 }
 
 // 来看一下我们写的第一个 thunk action creator！
@@ -54,61 +57,120 @@ function changeUserName(username) {
 // store.dispatch(fetchPosts('reactjs'));
 
 function fetchGists(username) {
+      var following = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
-  // Thunk middleware 知道如何处理函数。
-  // 这里把 dispatch 方法通过参数的形式参给函数，
+      return function (dispatch) {
 
-  return function (dispatch) {
+            dispatch(showGistsRequest(username));
+            var serial_promise = getUserGist(username);
 
-    // 首次 dispatch：更新应用的 state 来通知
-    // API 请求发起了。
+            if (following === false) {
+                  console.log('not in following 1', serial_promise);
+                  serial_promise.then(function (gists) {
+                        console.log('no following gist 2', gists);
+                        dispatch(showGistsSuccess(username, gists));
+                  })['catch'](function (ex) {
+                        console.log('parsing failed', ex);
+                        dispatch(showGistsFail(username, ex));
+                  });
+            } else {
+                  var following_serial_promise = getUserFollowing(username);
 
-    dispatch(showGistsRequest(username));
-
-    // thunk middleware 调用的函数可以有返回值，
-    // 它会被当作 dispatch 方法的返回值传递。
-
-    // 这个案例中，我们返回一个等待处理的 promise。
-    // 这并不是 redux middleware 所必须的，但是我们的一个约定。
-    //
-    _axios2['default'].get('https://api.github.com/users/' + username + '/gists').then(function (response) {
-      return response.data;
-    }).then(function (json) {
-      console.log('response json', json);
-      //解析gist的URL，并发异步请求获取内容
-      var serial = [];
-      json.map(function (gist) {
-        var _loop = function () {
-          var file = gist.files[key];
-          p = _axios2['default'].get(file.raw_url).then(function (res) {
-            return Object.assign({}, file, { code: res.data });
-          });
-
-          serial.push(p);
-        };
-
-        for (var key in gist.files) {
-          var p;
-
-          _loop();
-        }
-      });
-      console.log('serial', serial);
-
-      _axios2['default'].all(serial).then(function (gists) {
-        console.log('no spread', gists);
-        dispatch(showGistsSuccess(username, gists));
-      });
-    })['catch'](function (ex) {
-      console.log('parsing failed', ex);
-    });
-
-    // 在实际应用中，还需要
-    // 捕获网络请求的异常。
-  };
+                  following_serial_promise.then(function (following_serial_promises) {
+                        console.log('in following 1', serial_promise, following_serial_promises);
+                        following_serial_promises.push.apply(following_serial_promises, [serial_promise]);
+                        return following_serial_promises;
+                  }).then(function (serial_promise) {
+                        console.log('in following ', serial_promise);
+                        _axios2['default'].all(serial_promise).then(function (gistsArray) {
+                              console.log('following true', gistsArray);
+                              var items = [];
+                              gistsArray.map(function (gists) {
+                                    items.push.apply(items, _toConsumableArray(gists));
+                              });
+                              console.log('following items', items);
+                              dispatch(showGistsSuccess(username, items));
+                        })['catch'](function (ex) {
+                              console.log('parsing failed', ex);
+                              dispatch(showGistsFail(username, ex));
+                        });
+                  });
+            }
+      };
 }
 
-// 以此来让它自己也能 dispatch action。
+/**
+ * 返回后，通过then获取指定用户的所有gist的promise对象
+ * @param  {[type]} username [description]
+ * @return {[type]}          [description]
+ */
+function getUserGistPromise(username) {
+      return _axios2['default'].get('https://api.github.com/users/' + username + '/gists?access_token=042af57e21de136c66ff9704106be9d8abfc5af5').then(function (response) {
+            return response.data;
+      }).then(function (json) {
+            console.log('response json', json);
+            //解析gist的URL，并发异步请求获取内容
+            var promise = [];
+            json.map(function (gist) {
+                  var _loop = function () {
+                        var file = gist.files[key];
+                        p = _axios2['default'].get(file.raw_url).then(function (res) {
+                              return Object.assign({}, file, { code: res.data });
+                        });
+
+                        promise.push(p);
+                  };
+
+                  for (var key in gist.files) {
+                        var p;
+
+                        _loop();
+                  }
+            });
+            console.log('promise', promise);
+
+            return promise;
+      });
+}
+
+/**
+ * 返回后，通过then获取指定用户所关注的人的Gist对象
+ * @param  {[type]} username [description]
+ * @return {[type]}          [description]
+ */
+function getUserFollowing(username) {
+      return _axios2['default'].get('https://api.github.com/users/' + username + '/following?access_token=042af57e21de136c66ff9704106be9d8abfc5af5').then(function (response) {
+            return response.data;
+      }).then(function (json) {
+            var following_gist_promises = [];
+            json = json.slice(0, 1);
+            json.map(function (user) {
+                  following_gist_promises.push(getUserGist(user.login));
+            });
+
+            console.log('following_gist_promises', following_gist_promises);
+
+            return following_gist_promises;
+      });
+}
+
+/**
+ * 返回后，通过then获取指定用户的所有gist对象
+ * @param  {[type]} username [description]
+ * @return {[type]}          [description]
+ */
+function getUserGist(username) {
+      return getUserGistPromise(username).then(function (serial) {
+            return _axios2['default'].all(serial).then(function (gists) {
+                  console.log('no following gist 3', gists);
+                  return gists;
+            })['catch'](function (ex) {
+                  console.log('parsing failed', ex);
+            });
+      })['catch'](function (ex) {
+            console.error('parsing failed', ex);
+      });
+}
 
 },{"axios":9}],2:[function(require,module,exports){
 'use strict';
@@ -147,13 +209,11 @@ var GistDiv = (function (_Component) {
   _createClass(GistDiv, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      console.log('componentDidMount');
       this._hightlight();
     }
   }, {
     key: 'componentDidUpdate',
     value: function componentDidUpdate() {
-      console.log('componentDidUpdate');
       this._hightlight();
 
       var client = new ZeroClipboard(document.getElementsByClassName("copy-button"));
@@ -161,14 +221,12 @@ var GistDiv = (function (_Component) {
   }, {
     key: '_hightlight',
     value: function _hightlight() {
-      console.log('_hightlight');
       Prism.highlightAll(true);
     }
   }, {
     key: 'render',
     value: function render() {
       var self = this;
-      console.log('gistdiv', self.props);
 
       var row = self.props.items.map(function (gist, index) {
         var language = 'textile';
@@ -184,7 +242,7 @@ var GistDiv = (function (_Component) {
         var pname = "line-numbers" + " " + cname;
         return _react2['default'].createElement(
           'div',
-          null,
+          { key: index },
           _react2['default'].createElement(
             'h2',
             null,
@@ -214,7 +272,6 @@ var GistDiv = (function (_Component) {
           )
         );
       });
-      console.log('row', row);
       if (_lodash2['default'].isEmpty(row)) {
         row = "请先获取Gist";
       }
@@ -226,6 +283,10 @@ var GistDiv = (function (_Component) {
           _react2['default'].createElement('img', { src: './public/img/482.GIF' })
         );
       }
+
+      if (!_lodash2['default'].isEmpty(this.props.error)) {
+        row = this.props.error;
+      };
 
       return _react2['default'].createElement(
         'div',
@@ -290,6 +351,14 @@ var UserList = (function (_Component) {
           'button',
           null,
           '获取'
+        ),
+        _react2['default'].createElement(
+          'button',
+          { onClick: function (e) {
+              e.preventDefault();
+              self.props.handlerClick(self.props.username);
+            } },
+          '好友的Gists'
         )
       );
     }
@@ -356,8 +425,9 @@ var UserBox = (function (_Component) {
         ),
         _react2['default'].createElement(_GistForm2['default'], { username: this.props.username,
           handlerSubmit: this.props.handlerSubmit,
-          handlerChange: this.props.handlerChange }),
-        _react2['default'].createElement(_GistDiv2['default'], { items: this.props.items, isFetching: this.props.isFetching })
+          handlerChange: this.props.handlerChange,
+          handlerClick: this.props.handlerClick }),
+        _react2['default'].createElement(_GistDiv2['default'], { items: this.props.items, isFetching: this.props.isFetching, error: this.props.error })
       );
     }
   }]);
@@ -392,7 +462,8 @@ function mapStateToProps(state) {
   return {
     username: state.gists.username,
     items: state.gists.items || [],
-    isFetching: state.gists.isFetching
+    isFetching: state.gists.isFetching,
+    error: state.gists.error
   };
 }
 
@@ -404,6 +475,9 @@ function mapDispatchToProps(dispatch, ownProps) {
     },
     handlerChange: function handlerChange(username) {
       return dispatch((0, _actionsUser.changeUserName)(username));
+    },
+    handlerClick: function handlerClick(username) {
+      return dispatch((0, _actionsUser.fetchGists)(username, true));
     }
   };
 }
@@ -475,7 +549,8 @@ function gets(state, action) {
       });
     case 'SHOW_GISTS_FAIL':
       return Object.assign({}, state, {
-        isFetching: false
+        isFetching: false,
+        error: action.error
       });
     default:
       return state;
@@ -483,7 +558,7 @@ function gets(state, action) {
 }
 
 function getGists(state, action) {
-  if (state === undefined) state = { username: 'robbinhan', items: [], isFetching: false };
+  if (state === undefined) state = { username: 'robbinhan', items: [], isFetching: false, error: null };
 
   switch (action.type) {
     case 'SHOW_GISTS_REQUEST':

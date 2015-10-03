@@ -12,6 +12,10 @@ export default class UserList extends Component {
         value={this.props.username} 
         onChange={(e) => self.props.handlerChange(e.target.value)} />
         <button>获取</button>
+        <button onClick={function  (e) {
+           e.preventDefault();
+           self.props.handlerClick(self.props.username)
+        }} >好友的Gists</button>
       </form>
     );
   }

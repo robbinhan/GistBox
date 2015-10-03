@@ -4,25 +4,21 @@ import _ from 'lodash'
 export default class GistDiv extends Component {
 
   componentDidMount () {
-    console.log('componentDidMount');
     this._hightlight();
   }
 
   componentDidUpdate () {
-    console.log('componentDidUpdate');
     this._hightlight();
 
     var client = new ZeroClipboard( document.getElementsByClassName("copy-button") );
   }
 
   _hightlight () {
-      console.log('_hightlight')
       Prism.highlightAll(true);
   }
     
   render() {
     let self = this
-    console.log('gistdiv',self.props)
     
     let row = self.props.items.map(function (gist,index) {
       let  language = 'textile';
@@ -37,7 +33,7 @@ export default class GistDiv extends Component {
       let cname = "language-"+ language;
       let pname = "line-numbers" + " " + cname;
        return (
-            <div >
+            <div key={index}>
                   <h2>{gist.filename}</h2>
                   <span>
                             <button className="copy-button" data-clipboard-text={gist.code}>复制</button>
@@ -50,7 +46,6 @@ export default class GistDiv extends Component {
             </div>
       )
     })
-    console.log('row',row)
     if (_.isEmpty(row)) {
       row = "请先获取Gist"
     }
@@ -62,6 +57,10 @@ export default class GistDiv extends Component {
             </div>
         )
     }
+
+    if (!_.isEmpty(this.props.error)) {
+      row = this.props.error
+    };
 
     return (
        <div className="code-div" >

@@ -9,7 +9,8 @@ function mapStateToProps(state) {
   return {
     username: state.gists.username,
     items: state.gists.items || [],
-    isFetching: state.gists.isFetching
+    isFetching: state.gists.isFetching,
+    error: state.gists.error
   };
 }
 
@@ -17,7 +18,8 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch,ownProps) {
   return {
     handlerSubmit: (username) => dispatch(fetchGists(username)),
-    handlerChange: (username) => dispatch(changeUserName(username))
+    handlerChange: (username) => dispatch(changeUserName(username)),
+    handlerClick: (username) => dispatch(fetchGists(username,true))
   };
 }
 

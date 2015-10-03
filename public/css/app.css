@@ -11,12 +11,12 @@ input {
     width: 10rem;
 }
 
-button {
+/*button {
     margin: 0 1rem;
     height: 2rem;
     width: 5rem;
     border-style: solid;
-}
+}*/
 
 .gist-div {
     text-align: center;
@@ -27,3 +27,22 @@ button {
     margin-bottom: 0.1rem;
     margin:  0 2.5%;
 }
+
+button {
+ background: #3498db;
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  border-radius: 28px;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+button:hover {
+  background: #3cb0fd;
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+
+

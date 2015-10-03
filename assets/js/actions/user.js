@@ -1,4 +1,6 @@
 import axios from 'axios';
+import localforage from 'localforage';
+const ACCESS_TOKEN='a795112d8f7504cc08f81e5d7ede0cd8327dafb1';
 /*
  * action types
  */
@@ -42,40 +44,50 @@ export function fetchGists(username,following=false) {
   return function (dispatch) {
 
       dispatch(showGistsRequest(username));
-      var serial_promise = getUserGist(username)
-
+      
       if (following === false) {
-            console.log('not in following 1',serial_promise)
-            serial_promise.then(function(gists){ 
-                  console.log('no following gist 2',gists);
-                  dispatch(showGistsSuccess(username, gists)) 
-            }).catch(function(ex) {
-                  console.log('parsing failed', ex)
-                  dispatch(showGistsFail(username,ex))
+            let storageKey = 'nofollowing'+username;
+            localforage.getItem(storageKey).then((nofollowingJson,err) => {
+                  if (nofollowingJson) {
+                        dispatch(showGistsSuccess(username, JSON.parse(nofollowingJson)))
+                  } else {
+                        var serial_promise = getUserGist(username)
+                        serial_promise.then(function(gists){ 
+                              localforage.setItem(storageKey,JSON.stringify(gists));
+                              dispatch(showGistsSuccess(username, gists)) 
+                        }).catch(function(ex) {
+                              dispatch(showGistsFail(username,ex))
+                        })
+                  }
             })
       } else {
-            let following_serial_promise = getUserFollowing(username);
-            
-            following_serial_promise.then(function  (following_serial_promises) {
-                  console.log('in following 1',serial_promise,following_serial_promises)
-                  following_serial_promises.push(...[serial_promise])
-                  return following_serial_promises;
-            }).then(function  (serial_promise) {
-                  console.log('in following ',serial_promise)
-                  axios.all(serial_promise)
-                  .then(function (gistsArray) {
-                        console.log('following true',gistsArray);
-                        var items = [];
-                        gistsArray.map(function(gists) {
-                              items.push(...gists)
+            let storageKey = 'following'+username;
+
+            localforage.getItem(storageKey).then((nofollowingJson,err) => {
+                  if (nofollowingJson) {
+                        dispatch(showGistsSuccess(username, JSON.parse(nofollowingJson)))
+                  } else {
+                        var serial_promise = getUserGist(username)
+                        let following_serial_promise = getUserFollowing(username);
+                        
+                        following_serial_promise.then(function  (following_serial_promises) {
+                              following_serial_promises.push(...[serial_promise])
+                              return following_serial_promises;
+                        }).then(function  (serial_promise) {
+                              axios.all(serial_promise)
+                              .then(function (gistsArray) {
+                                    var items = [];
+                                    gistsArray.map(function(gists) {
+                                          items.push(...gists)
+                                    })
+                                    localforage.setItem(storageKey,JSON.stringify(items));
+                                    dispatch(showGistsSuccess(username, items)) 
+                              }).catch(function(ex) {
+                                    dispatch(showGistsFail(username,ex))
+                              })
                         })
-                        console.log('following items',items);
-                        dispatch(showGistsSuccess(username, items)) 
-                  }).catch(function(ex) {
-                        console.log('parsing failed', ex);
-                        dispatch(showGistsFail(username,ex))
-                  })
-            })
+                  }
+            });
       }
   };
 }
@@ -86,10 +98,9 @@ export function fetchGists(username,following=false) {
  * @return {[type]}          [description]
  */
 function getUserGistPromise (username) {
-      return axios.get(`https://api.github.com/users/${username}/gists?access_token=042af57e21de136c66ff9704106be9d8abfc5af5`)
+      return axios.get(`https://api.github.com/users/${username}/gists?access_token=${ACCESS_TOKEN}`)
                   .then(response => response.data)
                   .then(function(json) {
-                        console.log('response json',json); 
                         //解析gist的URL，并发异步请求获取内容
                         var promise = [];
                         json.map(function(gist){
@@ -99,7 +110,6 @@ function getUserGistPromise (username) {
                                     promise.push(p);
                               }
                         })
-                        console.log('promise',promise);
 
                         return promise;
                   });
@@ -111,7 +121,7 @@ function getUserGistPromise (username) {
  * @return {[type]}          [description]
  */
 function getUserFollowing(username) {
-      return axios.get(`https://api.github.com/users/${username}/following?access_token=042af57e21de136c66ff9704106be9d8abfc5af5`)
+      return axios.get(`https://api.github.com/users/${username}/following?access_token=${ACCESS_TOKEN}`)
                   .then(response => response.data)
                   .then(function(json) {
                         var following_gist_promises = [];
@@ -119,8 +129,6 @@ function getUserFollowing(username) {
                         json.map(function(user){
                               following_gist_promises.push(getUserGist(user.login))
                         })
-
-                        console.log('following_gist_promises',following_gist_promises);
 
                         return following_gist_promises;
                   })
@@ -135,13 +143,10 @@ function getUserGist (username) {
       return getUserGistPromise(username).then(function  (serial) {
             return axios.all(serial)
             .then(function(gists){ 
-                  console.log('no following gist 3',gists);
                   return gists;
             })
             .catch(function(ex) {
-                  console.log('parsing failed', ex)
             })
       }).catch(function(ex) {
-                  console.error('parsing failed', ex)
       })
 }
